@@ -18,9 +18,9 @@ function App() {
                    uid:user.uid,
                    updateProfile:(args) => updateProfile(user,{displayName:user.displayName}),
                });
-           }/*else{
-               setIsLoggedIn(false);
-           }*/
+           }else{
+               setUserObj(null);
+           }
            setInit(true);
         } )
     }, []);
