@@ -1,24 +1,28 @@
 import React, {useState} from "react";
-import {dbService} from "../fbase";
+import {dbService, storageService} from "../fbase";
 import {doc, deleteDoc, updateDoc } from "firebase/firestore"
+import {  deleteObject, ref } from "firebase/storage";
 
-const Nweet = ({nweetOjb, isOwner}) => {
+const Nweet = ({nweetObj, isOwner}) => {
     const [editing, setEditing] = useState(false);
-    const [newNweet, setNewNweet] = useState(nweetOjb.text);
+    const [newNweet, setNewNweet] = useState(nweetObj.text);
 
     const onDeleteClick = async () => {
         const ok = window.confirm("Are you sure you want to delete this nweet?");
         if (ok) {
-            /*await dbService.doc(`nweet/${nweetOjb.id}`).delete();*/
-            await deleteDoc(doc(dbService, 'nweets', nweetOjb.id));
+            /*await dbService.doc(`nweet/${nweetOjb.id}`).delete();
+            await storageService.refFromURL(nweetObj.attachmentUrl).delete();*/
+            await deleteDoc(doc(dbService, 'nweets', nweetObj.id));
+            await deleteObject(ref(storageService, nweetObj.attachmentUrl));
+
         }
     }
 
     const toggleEditing = () => setEditing((prev) => !prev);
     const onSubmit = async (event) => {
         event.preventDefault();
-        await updateDoc(doc(dbService, "nweets", nweetOjb.id), { text: newNweet });
-        /*await dbService.doc(`nweets/${nweetOjb.id}`).update({
+        await updateDoc(doc(dbService, "nweets", nweetObj.id), { text: newNweet });
+        /*await dbService.doc(`nweets/${nweetObj.id}`).update({
             text:newNweet,
         });*/
         setEditing(false);
@@ -34,16 +38,25 @@ const Nweet = ({nweetOjb, isOwner}) => {
             {
                 editing ? (
                     <>
-                        <form onSubmit={onSubmit}>
-                            <input type="text" placeholder="Edit you nweet" value={newNweet} required onChange={onChange} />
-                            <input type="submit" value="Update Nweet" />
-                        </form>
-                        <button onClick={toggleEditing}>Cancel</button>
+                        {isOwner && (
+                            <>
+                                <form onSubmit={onSubmit}>
+                                    <input type="text" placeholder="Edit you nweet" value={newNweet} required
+                                           onChange={onChange}/>
+                                    <input type="submit" value="Update Nweet"/>
+                                </form>
+                                <button onClick={toggleEditing}>Cancel</button>
+                            </>
+                        )}
                     </>
                 ) : (
                     <>
-                        <h4>{nweetOjb.text} </h4>
-                        {isOwner && (
+                        <h4>{nweetObj.text} </h4>
+                        {nweetObj.attachmentUrl && (
+                            <img src={nweetObj.attachmentUrl} width="50px" height="50px" />
+                        )}
+                        {isOwner &&
+                            (
                             <>
                                 <button onClick={onDeleteClick}>Delete Nweet</button>
                                 <button onClick={toggleEditing}>Edit Nweet</button>
